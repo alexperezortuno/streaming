@@ -1,0 +1,14 @@
+version: "3.3"
+services:
+  goservice:
+    image: alexperezortuno/go-apps:stream-api
+    ports:
+      - 8081:81
+    environment:
+      - "LOG_FILE_LOCATION=/go/logs/stream_api"
+  nginx:
+    image: alexperezortuno/nginx-apps:streaming
+    ports:
+      - 80:80
+    depends_on:
+      - goservice
