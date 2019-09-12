@@ -16,3 +16,4 @@ app/bin/go*
 app/src/github.com/*
 app/src/gopkg.in/*
 app/pkg/*
+app/access.log
