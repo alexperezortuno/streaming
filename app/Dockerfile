@@ -11,6 +11,4 @@ RUN go get -t github.com/gorilla/mux
 RUN go get -t gopkg.in/natefinch/lumberjack.v2
 RUN go build -o stream_api
 
-EXPOSE 8081
-
 ENTRYPOINT /go/src/stream_api

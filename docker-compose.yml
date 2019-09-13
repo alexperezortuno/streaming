@@ -3,12 +3,21 @@ services:
   goservice:
     image: alexperezortuno/go-apps:stream-api
     ports:
-      - 8081:81
+      - 8081:80
     environment:
       - "LOG_FILE_LOCATION=/go/logs/stream_api"
+    networks:
+      - stream
+
   nginx:
     image: alexperezortuno/nginx-apps:streaming
+    container_name: server_stream
     ports:
       - 80:80
-    depends_on:
-      - goservice
+      - 443:443
+    networks:
+      - stream
+
+networks:
+  stream:
+    driver: bridge
