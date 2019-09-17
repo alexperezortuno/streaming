@@ -16,3 +16,6 @@ app/bin/go*
 app/src/github.com/*
 app/src/gopkg.in/*
 app/pkg/*
+app/src/static/media/*
+!app/src/static/media/.gitkeep
+app/access.log
