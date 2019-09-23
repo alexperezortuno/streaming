@@ -3,12 +3,21 @@ package v1
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"html/template"
 	"net/http"
 	"os"
 	"strconv"
 )
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	base, _ := os.Getwd()
+	tmplFile := fmt.Sprintf("%s/src/templates/home.html", base)
+	
+	tmpl := template.Must(template.ParseFiles(tmplFile))
+	_ = tmpl.Execute(w, "")
+}
+
+func indexApiHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = fmt.Fprintf(w, "Stream app")
 }
 
@@ -40,16 +49,16 @@ func streamHandler(response http.ResponseWriter, request *http.Request) {
 }
 
 func serveHlsM3u8(w http.ResponseWriter, r *http.Request, mediaBase, m3u8Name string) {
-	base := os.Getenv("BASE")
-	mediaFile := fmt.Sprintf("%s/app/src/static/%s/hls/%s", base, mediaBase, m3u8Name)
+	base, _ := os.Getwd()
+	mediaFile := fmt.Sprintf("%s/src/static/%s/hls/%s", base, mediaBase, m3u8Name)
 	http.ServeFile(w, r, mediaFile)
 
 	w.Header().Set("Content-Type", "application/x-mpegURL")
 }
 
 func serveHlsTs(w http.ResponseWriter, r *http.Request, mediaBase, segName string) {
-	base := os.Getenv("BASE")
-	mediaFile := fmt.Sprintf("%s/app/src/static/%s/hls/%s", base, mediaBase, segName)
+	base, _ := os.Getwd()
+	mediaFile := fmt.Sprintf("%s/src/static/%s/hls/%s", base, mediaBase, segName)
 	http.ServeFile(w, r, mediaFile)
 
 	w.Header().Set("Content-Type", "video/MP2T")
