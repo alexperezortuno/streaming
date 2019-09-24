@@ -3,6 +3,7 @@ package tools
 import (
     "context"
     "log"
+    "math/rand"
     "net/http"
     "os"
     "os/signal"
@@ -10,6 +11,12 @@ import (
     "time"
 )
 
+const (
+    chars         = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    letterIdxBits = 6                    // 6 bits to represent a letter index
+    letterIdxMask = 1 << letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+    letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
 
 func WaitForShutdown(server *http.Server) {
     interruptChan := make(chan os.Signal, 1)
@@ -25,4 +32,42 @@ func WaitForShutdown(server *http.Server) {
     
     log.Println("Shutting down")
     os.Exit(0)
+}
+
+func RandStringBytesMaskImprSrc(src rand.Source, n int) string {
+    b := make([]byte, n)
+    // A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
+    for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
+        if remain == 0 {
+            cache, remain = src.Int63(), letterIdxMax
+        }
+        if idx := int(cache & letterIdxMask); idx < len(chars) {
+            b[i] = chars[idx]
+            i--
+        }
+        cache >>= letterIdxBits
+        remain--
+    }
+    
+    return string(b)
+}
+
+func CreateDirIfNotExist(dir string) {
+    base, _ := os.Getwd()
+    dir = base + "/" + dir
+    
+    if _, err := os.Stat(dir); os.IsNotExist(err) {
+        err = os.MkdirAll(dir, 0755)
+        
+        if err != nil {
+            panic(err)
+        }
+    }
+}
+
+
+func CheckErr(err error) {
+    if err != nil {
+        panic(err)
+    }
 }

@@ -18,6 +18,7 @@ func routes() *mux.Router {
 	
 	r.HandleFunc("/", indexHandler).Methods("GET")
 	r.HandleFunc("/api/v1", indexApiHandler).Methods("GET")
+	r.HandleFunc("/api/upload", uploadHandler).Methods("POST")
 	r.HandleFunc("/api/media/{mId:[0-9]+}/stream/", streamHandler).Methods("GET")
 	r.HandleFunc("/api/media/{mId:[0-9]+}/stream/{segName:index[0-9]+.ts}", streamHandler).Methods("GET")
 

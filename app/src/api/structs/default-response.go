@@ -1,4 +1,4 @@
-package interfaces
+package structs
 
 type DefaultResponse struct {
     Code    int16       `json:"code"`
