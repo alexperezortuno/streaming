@@ -2,11 +2,14 @@ package tools
 
 import (
     "context"
+    "database/sql"
+    "fmt"
     "log"
     "math/rand"
     "net/http"
     "os"
     "os/signal"
+    "strconv"
     "syscall"
     "time"
 )
@@ -66,8 +69,25 @@ func CreateDirIfNotExist(dir string) {
 }
 
 
-func CheckErr(err error) {
+func CheckErr(err error, line int) {
     if err != nil {
+        log.Fatal("Error DB: " + err.Error() + " line: " + strconv.Itoa(line))
         panic(err)
     }
+}
+
+func GetMediaBase(mId int) string {
+    mediaRoot := "media"
+    
+    return fmt.Sprintf("%s/%d", mediaRoot, mId)
+}
+
+func RowCount(rows *sql.Rows) (count int) {
+    
+    for rows.Next() {
+        err:= rows.Scan(&count)
+        CheckErr(err, 88)
+    }
+    
+    return count
 }

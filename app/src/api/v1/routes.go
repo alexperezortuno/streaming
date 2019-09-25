@@ -18,9 +18,11 @@ func routes() *mux.Router {
 	
 	r.HandleFunc("/", indexHandler).Methods("GET")
 	r.HandleFunc("/api/v1", indexApiHandler).Methods("GET")
-	r.HandleFunc("/api/upload", uploadHandler).Methods("POST")
-	r.HandleFunc("/api/media/{mId:[0-9]+}/stream/", streamHandler).Methods("GET")
-	r.HandleFunc("/api/media/{mId:[0-9]+}/stream/{segName:index[0-9]+.ts}", streamHandler).Methods("GET")
+	r.HandleFunc("/api/upload", uploadApiHandler).Methods("POST")
+	r.HandleFunc("/api/video", videosApiHandler).Methods("GET")
+	r.HandleFunc("/api/video/{id:[A-z0-9]+}", videoApiHandler).Methods("GET")
+	r.HandleFunc("/api/media/{mId:[A-z0-9]+}/stream/", streamHandler).Methods("GET")
+	r.HandleFunc("/api/media/{mId:[A-z0-9]+}/stream/{segName:index[0-9]+.ts}", streamHandler).Methods("GET")
 
 	return r
 }

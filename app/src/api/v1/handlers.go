@@ -20,45 +20,6 @@ import (
 	"time"
 )
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	base, _ := os.Getwd()
-	tmplFile := fmt.Sprintf("%s/src/templates/home.html", base)
-	
-	tmpl := template.Must(template.ParseFiles(tmplFile))
-	_ = tmpl.Execute(w, "")
-}
-
-func indexApiHandler(w http.ResponseWriter, r *http.Request) {
-	_, _ = fmt.Fprintf(w, "Stream app")
-}
-
-func getMediaBase(mId int) string {
-	mediaRoot := "media"
-
-	return fmt.Sprintf("%s/%d", mediaRoot, mId)
-}
-
-func streamHandler(response http.ResponseWriter, request *http.Request) {
-	vars := mux.Vars(request)
-	mId, err := strconv.Atoi(vars["mId"])
-
-	if err != nil {
-		response.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	segName, ok := vars["segName"]
-
-	if !ok {
-		mediaBase := getMediaBase(mId)
-		m3u8Name := "index.m3u8"
-		serveHlsM3u8(response, request, mediaBase, m3u8Name)
-	} else {
-		mediaBase := getMediaBase(mId)
-		serveHlsTs(response, request, mediaBase, segName)
-	}
-}
-
 func serveHlsM3u8(response http.ResponseWriter, request *http.Request, mediaBase, m3u8Name string) {
 	base, _ := os.Getwd()
 	mediaFile := fmt.Sprintf("%s/src/static/%s/hls/%s", base, mediaBase, m3u8Name)
@@ -75,7 +36,40 @@ func serveHlsTs(response http.ResponseWriter, request *http.Request, mediaBase, 
 	response.Header().Set("Content-Type", "video/MP2T")
 }
 
-func uploadHandler(response http.ResponseWriter, request *http.Request) {
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	base, _ := os.Getwd()
+	tmplFile := fmt.Sprintf("%s/src/templates/home.html", base)
+	
+	tmpl := template.Must(template.ParseFiles(tmplFile))
+	_ = tmpl.Execute(w, "")
+}
+
+func indexApiHandler(w http.ResponseWriter, r *http.Request) {
+	_, _ = fmt.Fprintf(w, "Stream app")
+}
+
+func streamHandler(response http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+	mId, err := strconv.Atoi(vars["mId"])
+
+	if err != nil {
+		response.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	segName, ok := vars["segName"]
+
+	if !ok {
+		mediaBase := tools.GetMediaBase(mId)
+		m3u8Name := "index.m3u8"
+		serveHlsM3u8(response, request, mediaBase, m3u8Name)
+	} else {
+		mediaBase := tools.GetMediaBase(mId)
+		serveHlsTs(response, request, mediaBase, segName)
+	}
+}
+
+func uploadApiHandler(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Content-Type", "application/json")
 	base, _ := os.Getwd()
 	var message []string
@@ -90,6 +84,7 @@ func uploadHandler(response http.ResponseWriter, request *http.Request) {
 	_ = request.ParseMultipartForm(10 << 20)
 	
 	name := request.Form.Get("name")
+	list := request.Form.Get("list")
 	
 	if name == "" {
 		fmt.Println("Error Retrieving the name file")
@@ -150,16 +145,17 @@ func uploadHandler(response http.ResponseWriter, request *http.Request) {
 			status = "Error"
 		} else {
 			db, err := sql.Open("sqlite3", base + "/src/stream.db")
-			tools.CheckErr(err)
+			tools.CheckErr(err, 153)
 			
-			smt, err := db.Prepare("INSERT INTO video (internal_id, name) SET (?, ?)")
-			tools.CheckErr(err)
+			smt, err := db.Prepare("INSERT INTO video (internal_id, name, list) VALUES (?, ?, ?)")
+			tools.CheckErr(err, 156)
 			
-			res, err = smt.Exec(rndString, name)
-			tools.CheckErr(err)
+			res, err := smt.Exec(rndString, name, list)
+			tools.CheckErr(err, 159)
 			
-			id, err := res.LastInsertId()
-			checkErr(err)
+			_, err = res.LastInsertId()
+			tools.CheckErr(err, 163)
+			defer smt.Close()
 			
 			_ = db.Close()
 			
@@ -178,4 +174,89 @@ func uploadHandler(response http.ResponseWriter, request *http.Request) {
 		
 		_, _ = response.Write(js)
 	}
+}
+
+func videosApiHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	base, err := os.Getwd()
+	tools.CheckErr(err, 181)
+
+	db, err := sql.Open("sqlite3", base + "/src/stream.db")
+	tools.CheckErr(err, 184)
+	
+	rows, err := db.Query("SELECT name, internal_id AS internalId, list FROM video")
+	tools.CheckErr(err, 187)
+	
+	var name string
+	var internalId string
+	var list string
+	var response structs.VideoResponse
+	
+	for rows.Next() {
+		err = rows.Scan(&name, &internalId, &list)
+		response.Message = append(response.Message, structs.Video{Name: name, Id: internalId, List: list})
+	}
+	
+	response.Code = 200
+	response.Status = "OK"
+	
+	_ = rows.Close()
+	
+	_ = db.Close()
+	
+	_ = json.NewEncoder(w).Encode(response)
+}
+
+func videoApiHandler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    vars := mux.Vars(r)
+    id := vars["id"]
+    var name string
+	var internalId string
+	var list string
+	var response structs.VideoResponse
+	var code int16
+	var status string
+    
+    base, err := os.Getwd()
+    tools.CheckErr(err, 216)
+    
+    db, err := sql.Open("sqlite3", base+"/src/stream.db")
+    tools.CheckErr(err, 219)
+    
+	rowsCount, err := db.Query("SELECT count(*) FROM video WHERE internal_id=?", id)
+	count := tools.RowCount(rowsCount)
+	
+	defer rowsCount.Close()
+	
+	if count <= 0 {
+		code = 300
+		status = "OK"
+	}
+    
+    if count > 0 {
+		rows, err := db.Query("SELECT name, internal_id AS internalId, list FROM video WHERE internal_id=?", id)
+		tools.CheckErr(err, 222)
+		
+		defer rows.Close()
+	
+		for rows.Next() {
+			err = rows.Scan(&name, &internalId, &list)
+		
+			if err != nil {
+				log.Fatal(err.Error())
+			} else {
+				response.Message = append(response.Message, structs.Video{Name: name, Id: internalId, List: list})
+				code = 200
+				status = "OK"
+			}
+		}
+	}
+    
+    response.Code = code
+    response.Status = status
+	
+    _ = db.Close()
+    
+    _ = json.NewEncoder(w).Encode(response)
 }
