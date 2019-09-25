@@ -1,3 +1,16 @@
-# streaming
+# Streaming
 
-ffmpeg -i input.mp4 -profile:v baseline -level 3.0 -s 1280x720 -start_number 0 -hls_time 10 -hls_list_size 0 -f hls index.m3u8
+### Create database
+
+```
+$ cd app/src
+$ sqlite3 stream.db
+$ CREATE TABLE video (
+    id INTEGER constraint video_pk primary key autoincrement,
+    name        VARCHAR(100) default NULL,
+    internal_id VARCHAR(10)  default NULL,
+    created_at  TIMESTAMP    default CURRENT_TIMESTAMP,
+    list        VARCHAR(50)  default NULL
+);
+$ .quit
+```
