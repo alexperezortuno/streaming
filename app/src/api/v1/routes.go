@@ -1,14 +1,60 @@
 package v1
 
 import (
+	"api/structs"
 	"github.com/gorilla/mux"
 	"net/http"
 	"os"
 	"path"
 )
 
-func routes() *mux.Router {
-	r := mux.NewRouter()
+var routes = structs.Routes{
+	structs.Route{
+		"Index",
+		"GET",
+		"/",
+		IndexHandler,
+	},
+	structs.Route{
+		"IndexHome",
+		"GET",
+		"/api",
+		IndexApiHandler,
+	},
+	structs.Route{
+		"Upload",
+		"POST",
+		"/api/upload",
+		UploadApiHandler,
+	},
+	structs.Route{
+		"Video",
+		"GET",
+		"/api/video",
+		VideosApiHandler,
+	},
+	structs.Route{
+		"VideoDetail",
+		"GET",
+		"/api/video/{id:[A-z0-9]+}",
+		VideoApiHandler,
+	},
+	structs.Route{
+		"Media",
+		"GET",
+		"/api/media/{mId:[A-z0-9]+}/stream/",
+		StreamHandler,
+	},
+	structs.Route{
+		"MediaDetil",
+		"GET",
+		"/api/media/{mId:[A-z0-9]+}/stream/",
+		StreamHandler,
+	},
+}
+
+func NewRoutes() *mux.Router {
+		r := mux.NewRouter().StrictSlash(true)
 	base, _ := os.Getwd()
 	// Serve static files
 	sf := http.FileServer(http.Dir(path.Join(base, "src/static")))
@@ -16,13 +62,13 @@ func routes() *mux.Router {
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", sf))
 	r.PathPrefix("/media/").Handler(http.StripPrefix("/media/", mf))
 	
-	r.HandleFunc("/", indexHandler).Methods("GET")
-	r.HandleFunc("/api/v1", indexApiHandler).Methods("GET")
-	r.HandleFunc("/api/upload", uploadApiHandler).Methods("POST")
-	r.HandleFunc("/api/video", videosApiHandler).Methods("GET")
-	r.HandleFunc("/api/video/{id:[A-z0-9]+}", videoApiHandler).Methods("GET")
-	r.HandleFunc("/api/media/{mId:[A-z0-9]+}/stream/", streamHandler).Methods("GET")
-	r.HandleFunc("/api/media/{mId:[A-z0-9]+}/stream/{segName:index[0-9]+.ts}", streamHandler).Methods("GET")
+	for _, route := range routes {
+		r.
+			Name(route.Name).
+			Methods(route.Method).
+			Path(route.Pattern).
+			Handler(route.HandleFunc)
+	}
 
 	return r
 }

@@ -13,7 +13,7 @@ func init() {
 	// Server config
 	server := &http.Server{
 		Addr:           host + ":" + port,
-		Handler:        routes(),
+		Handler:        NewRoutes(),
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,

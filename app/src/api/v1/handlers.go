@@ -36,7 +36,7 @@ func serveHlsTs(response http.ResponseWriter, request *http.Request, mediaBase, 
 	response.Header().Set("Content-Type", "video/MP2T")
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	base, _ := os.Getwd()
 	tmplFile := fmt.Sprintf("%s/src/templates/home.html", base)
 	
@@ -44,11 +44,13 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	_ = tmpl.Execute(w, "")
 }
 
-func indexApiHandler(w http.ResponseWriter, r *http.Request) {
+func IndexApiHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	
 	_, _ = fmt.Fprintf(w, "Stream app")
 }
 
-func streamHandler(response http.ResponseWriter, request *http.Request) {
+func StreamHandler(response http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	mId, err := strconv.Atoi(vars["mId"])
 
@@ -69,7 +71,7 @@ func streamHandler(response http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func uploadApiHandler(response http.ResponseWriter, request *http.Request) {
+func UploadApiHandler(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Content-Type", "application/json")
 	base, _ := os.Getwd()
 	var message []string
@@ -176,7 +178,7 @@ func uploadApiHandler(response http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func videosApiHandler(w http.ResponseWriter, r *http.Request) {
+func VideosApiHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	base, err := os.Getwd()
 	tools.CheckErr(err, 181)
@@ -207,7 +209,7 @@ func videosApiHandler(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(response)
 }
 
-func videoApiHandler(w http.ResponseWriter, r *http.Request) {
+func VideoApiHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     vars := mux.Vars(r)
     id := vars["id"]
@@ -257,6 +259,8 @@ func videoApiHandler(w http.ResponseWriter, r *http.Request) {
     response.Status = status
 	
     _ = db.Close()
+	
+	defer r.Body.Close()
     
     _ = json.NewEncoder(w).Encode(response)
 }
