@@ -1,21 +1,23 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ViewEncapsulation} from '@angular/core';
 
 @Component({
-    selector: 'navbar',
-    templateUrl: './navbar.component.html',
-    styleUrls: ['./navbar.component.scss']
+  selector: 'navbar',
+  templateUrl: './navbar.component.html',
+  styleUrls: ['./navbar.component.scss'],
+  encapsulation: ViewEncapsulation.None,
 })
 export class NavbarComponent implements OnInit {
-    sidenav: boolean;
-    constructor() {
-    }
+  sidenav: boolean;
 
-    ngOnInit() {
-    }
+  constructor() {
+  }
 
-    toggle() {
-        this.sidenav = !this.sidenav;
-        console.log(this.sidenav);
-        return this.sidenav;
-    }
+  ngOnInit() {
+  }
+
+  toggle() {
+    this.sidenav = !this.sidenav;
+    console.log(this.sidenav);
+    return this.sidenav;
+  }
 }
