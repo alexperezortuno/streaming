@@ -1,7 +1,7 @@
-package v1
+package api
 
 import (
-	"api/structs"
+	"./structs"
 	"github.com/gorilla/mux"
 	"net/http"
 	"os"
@@ -51,14 +51,20 @@ var routes = structs.Routes{
 		"/api/media/{mId:[A-z0-9]+}/stream/",
 		StreamHandler,
 	},
+	structs.Route{
+		"ListCreate",
+		"POST",
+		"/api/list/create",
+		ListCreateApiHandler,
+	},
 }
 
 func NewRoutes() *mux.Router {
 		r := mux.NewRouter().StrictSlash(true)
 	base, _ := os.Getwd()
 	// Serve static files
-	sf := http.FileServer(http.Dir(path.Join(base, "src/static")))
-	mf := http.FileServer(http.Dir(path.Join(base, "src/static/media")))
+	sf := http.FileServer(http.Dir(path.Join(base, "web/static")))
+	mf := http.FileServer(http.Dir(path.Join(base, "web/static/media")))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", sf))
 	r.PathPrefix("/media/").Handler(http.StripPrefix("/media/", mf))
 	

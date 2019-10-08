@@ -1,4 +1,4 @@
-package v1
+package api
 
 var version = "0.1.0"
 var port = "3000"

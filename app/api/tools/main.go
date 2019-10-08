@@ -68,7 +68,6 @@ func CreateDirIfNotExist(dir string) {
     }
 }
 
-
 func CheckErr(err error, line int) {
     if err != nil {
         log.Fatal("Error DB: " + err.Error() + " line: " + strconv.Itoa(line))
@@ -90,4 +89,14 @@ func RowCount(rows *sql.Rows) (count int) {
     }
     
     return count
+}
+
+func DBConnection() *sql.DB {
+    base, err := os.Getwd()
+    CheckErr(err, 216)
+    
+    db, err := sql.Open("sqlite3", base + "/stream.db")
+    CheckErr(err, 219)
+    
+    return db
 }

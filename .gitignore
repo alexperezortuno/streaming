@@ -16,7 +16,7 @@ app/bin/*
 app/src/github.com/*
 app/src/gopkg.in/*
 app/pkg/*
-app/src/static/media/*
-!app/src/static/media/.gitkeep
+app/web/static/media/*
+!app/web/static/media/.gitkeep
 app/access.log
 app/src/stream.db
