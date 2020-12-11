@@ -11,6 +11,7 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 .idea/*
+build/*
 app/bin/*
 !app/bin/.gitkeep
 app/src/github.com/*
