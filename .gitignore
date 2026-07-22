@@ -38,3 +38,5 @@ graphify-out
 go.sum
 AGENTS.md
 bin/streaming
+*.m3u8
+bin/media/
