@@ -17,8 +17,6 @@ RUN adduser -D -h /app app
 WORKDIR /app
 
 COPY --from=builder /build/server .
-COPY --from=builder /build/migrations ./migrations
-
 USER app
 
 EXPOSE 3000
