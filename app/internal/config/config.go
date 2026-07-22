@@ -52,7 +52,6 @@ func Load() *Config {
 	cfg := &Config{
 		Port:             firstNonEmpty(flags.port, getEnv("PORT", "3000")),
 		DatabaseURL:      firstNonEmpty(flags.dbURL, getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/streaming?sslmode=disable")),
-		MediaPath:        getEnv("MEDIA_PATH", "./media"),
 		JWTSecret:        getEnv("JWT_SECRET", "change-me-in-production"),
 		JWTExpiration:    getDurationEnv("JWT_EXPIRATION", 72*time.Hour),
 		LogLevel:         firstNonEmpty(flags.logLevel, getEnv("LOG_LEVEL", "info")),
@@ -60,6 +59,8 @@ func Load() *Config {
 		MaxUploadSize:    getInt64Env("MAX_UPLOAD_SIZE", 500<<20),
 		TranscodeWorkers: int(getInt64Env("TRANSCODE_WORKERS", 2)),
 	}
+
+	cfg.MediaPath = resolvePath(getEnv("MEDIA_PATH", "./media"))
 
 	return cfg
 }
@@ -108,6 +109,14 @@ func tryLoadEnv(path string) {
 		return
 	}
 	slog.Debug("loaded env file", "path", abs)
+}
+
+func resolvePath(path string) string {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return path
+	}
+	return abs
 }
 
 func firstNonEmpty(vals ...string) string {
