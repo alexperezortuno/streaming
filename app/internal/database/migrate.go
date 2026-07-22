@@ -7,11 +7,16 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
-func RunMigrations(databaseURL, migrationsPath string) error {
-	m, err := migrate.New("file://"+migrationsPath, databaseURL)
+func RunMigrations(databaseURL string) error {
+	d, err := iofs.New(migrationsFS, "migrations")
+	if err != nil {
+		return fmt.Errorf("create migrator: %w", err)
+	}
+
+	m, err := migrate.NewWithSourceInstance("iofs", d, databaseURL)
 	if err != nil {
 		return fmt.Errorf("create migrator: %w", err)
 	}
