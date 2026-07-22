@@ -1,23 +1,40 @@
-# Binaries for programs and plugins
+# Binaries
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-# Test binary, build with `go test -c`
 *.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# IDE
 .idea/*
+.vscode/*
+
+# Build
 build/*
-app/bin/*
-!app/bin/.gitkeep
+/app/server
+
+# Dependencies (old GOPATH structure)
 app/src/github.com/*
 app/src/gopkg.in/*
 app/pkg/*
-app/web/static/media/*
-!app/web/static/media/.gitkeep
+
+# Media & uploads
+app/media/*
+!app/media/.gitkeep
+
+# Logs
 app/access.log
-app/src/stream.db
+*.log
+
+# Environment
+.env
+.env.local
+
+# Docker
+.docker/
+graphify-out
+go.sum
+AGENTS.md
+bin/streaming
