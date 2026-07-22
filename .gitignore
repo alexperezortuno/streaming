@@ -36,3 +36,5 @@ app/access.log
 .docker/
 graphify-out
 go.sum
+AGENTS.md
+bin/streaming
