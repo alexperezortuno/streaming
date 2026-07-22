@@ -32,7 +32,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	if err := database.RunMigrations(cfg.DatabaseURL, "migrations"); err != nil {
+	if err := database.RunMigrations(cfg.DatabaseURL); err != nil {
 		slog.Error("failed to run migrations", "error", err)
 		os.Exit(1)
 	}
