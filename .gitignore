@@ -35,3 +35,4 @@ app/access.log
 # Docker
 .docker/
 graphify-out
+go.sum
