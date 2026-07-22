@@ -1,9 +1,14 @@
 package config
 
 import (
+	"flag"
+	"log/slog"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -18,18 +23,100 @@ type Config struct {
 	TranscodeWorkers int
 }
 
+type cliFlags struct {
+	envFile  string
+	port     string
+	dbURL    string
+	logLevel string
+}
+
 func Load() *Config {
-	return &Config{
-		Port:             getEnv("PORT", "3000"),
-		DatabaseURL:      getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/streaming?sslmode=disable"),
+	var flags cliFlags
+
+	fs := flag.NewFlagSet("server", flag.ContinueOnError)
+	fs.Usage = func() {
+		fs.PrintDefaults()
+	}
+	fs.StringVar(&flags.envFile, "env-file", "", "Path to .env file")
+	fs.StringVar(&flags.port, "port", "", "Server port")
+	fs.StringVar(&flags.dbURL, "database-url", "", "PostgreSQL connection string")
+	fs.StringVar(&flags.logLevel, "log-level", "", "Log level (debug, info, warn, error)")
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		if err == flag.ErrHelp {
+			os.Exit(0)
+		}
+	}
+
+	loadEnvFiles(flags.envFile)
+
+	cfg := &Config{
+		Port:             firstNonEmpty(flags.port, getEnv("PORT", "3000")),
+		DatabaseURL:      firstNonEmpty(flags.dbURL, getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/streaming?sslmode=disable")),
 		MediaPath:        getEnv("MEDIA_PATH", "./media"),
 		JWTSecret:        getEnv("JWT_SECRET", "change-me-in-production"),
 		JWTExpiration:    getDurationEnv("JWT_EXPIRATION", 72*time.Hour),
-		LogLevel:         getEnv("LOG_LEVEL", "info"),
+		LogLevel:         firstNonEmpty(flags.logLevel, getEnv("LOG_LEVEL", "info")),
 		CORSOrigins:      getSliceEnv("CORS_ORIGINS", []string{"*"}),
-		MaxUploadSize:    getInt64Env("MAX_UPLOAD_SIZE", 500<<20), // 500MB
+		MaxUploadSize:    getInt64Env("MAX_UPLOAD_SIZE", 500<<20),
 		TranscodeWorkers: int(getInt64Env("TRANSCODE_WORKERS", 2)),
 	}
+
+	return cfg
+}
+
+func loadEnvFiles(flagEnvFile string) {
+	if flagEnvFile != "" {
+		tryLoadEnv(flagEnvFile)
+		return
+	}
+
+	candidates := []string{
+		".env",
+		"bin/.env",
+		"../.env",
+		"../bin/.env",
+	}
+
+	loaded := make(map[string]bool)
+	for _, path := range candidates {
+		abs, err := filepath.Abs(path)
+		if err != nil || loaded[abs] {
+			continue
+		}
+		if _, err := os.Stat(abs); os.IsNotExist(err) {
+			continue
+		}
+		if err := godotenv.Load(abs); err != nil {
+			slog.Warn("loading env file", "path", abs, "error", err)
+			continue
+		}
+		loaded[abs] = true
+		slog.Debug("loaded env file", "path", abs)
+	}
+}
+
+func tryLoadEnv(path string) {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return
+	}
+	if _, err := os.Stat(abs); os.IsNotExist(err) {
+		return
+	}
+	if err := godotenv.Load(abs); err != nil {
+		slog.Warn("loading env file", "path", abs, "error", err)
+		return
+	}
+	slog.Debug("loaded env file", "path", abs)
+}
+
+func firstNonEmpty(vals ...string) string {
+	for _, v := range vals {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 func getEnv(key, fallback string) string {
