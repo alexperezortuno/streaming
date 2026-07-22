@@ -3,16 +3,17 @@ version: "3.9"
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: streamingdb
     environment:
-      POSTGRES_DB: streaming
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${DB_NAME:-streaming}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -25,7 +26,7 @@ services:
       - "3000:3000"
     environment:
       PORT: "3000"
-      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/streaming?sslmode=disable"
+      DATABASE_URL: "postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:${DB_PORT:-5432}/${DB_NAME:-streaming}?sslmode=disable"
       MEDIA_PATH: "/app/media"
       JWT_SECRET: "change-me-in-production-use-a-real-secret"
       LOG_LEVEL: "info"
